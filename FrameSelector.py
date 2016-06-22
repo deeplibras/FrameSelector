@@ -13,28 +13,55 @@ class FrameSelector(object):
     def __init__(self):
         self.index = 0
         self.images = []
+        self.imagesFilename = []
+        self.saveLocation = None
+        self.coords = {}
+        self.coordShow = None
+
         # Create a windows and remove the resize option
         self.root = Tk()
+        self.root.wm_title("Frame Selector")
         self.root.minsize(width=640, height=480)
         self.root.resizable(width=False, height=False)
         self.configureGUI()       
     
     def configureGUI(self):
         self.l = Label(self.root)
+        self.l.bind('<Button-1>', self.click)
         self.l.pack(fill=BOTH, expand=1)
 
         # Create the options buttons and add to GUI
         f = Frame(self.root)
         Button(f, text="Open folder", command=self.openFolderClick).pack(side=LEFT, padx=5, pady=5)
         Button(f, text="Save location", command=self.saveClick).pack(side=LEFT, padx=5, pady=5)
-        Button(f, text="Select", command=self.selectClick).pack(side=LEFT, padx=5, pady=5)
         Button(f, text="Next", command=self.nextClick).pack(side=LEFT, padx=5, pady=5)
         self.log = StringVar()
         Label(f, textvariable=self.log).pack(side=RIGHT, padx=5, pady=5)
         f.place(x=0, y=0)
 
+        # Create a label option
+        f2 = Frame(self.root)
+        Label(f2, text="Image label").pack(side=LEFT, padx=5, pady=5)
+        self.imageLabel = Entry(f2)
+        self.imageLabel.pack(side=LEFT, padx=5, pady=5)
+        Button(f2, text="Select", command=self.selectClick).pack(side=LEFT, padx=5, pady=5)
+        self.coordsLog = StringVar()
+        Label(f2, textvariable=self.coordsLog).pack(side=RIGHT, padx=5, pady=5)
+        f2.place(x=0, y=40)
+
         # Start application
         self.root.mainloop()
+
+    def click(self, event):
+        self.coords["x"] = event.x
+        self.coords["y"] = event.y
+        self.coordsLog.set("Coords: ("+str(event.x)+","+str(event.y)+")")
+        if not self.coordShow:
+            self.coordShow = Label(self.root, text=" ", bg="red")
+            self.coordShow.place_configure(x=event.x-5, y=event.y-5, width=10, height=10)
+        else:
+            self.coordShow.place_forget()
+            self.coordShow.place_configure(x=event.x-5, y=event.y-5, width=10, height=10)
 
     # Action to open button click
     def openFolderClick(self):        
@@ -45,6 +72,7 @@ class FrameSelector(object):
         if folderName:
             self.log.set("Search start")
             self.images = []
+            self.imagesFilename = []
             self.index = 0
 
             _thread.start_new_thread(self.searchImages, (folderName,))
@@ -55,6 +83,7 @@ class FrameSelector(object):
             for filename in fnmatch.filter(filenames, '*.bin'):
                 if "Color" in root:
                     # Add the find image to a list
+                    self.imagesFilename.append(filename)
                     self.images.append(os.path.join(root, filename))
         
         # Show first image in GUI
@@ -74,7 +103,22 @@ class FrameSelector(object):
     # Action to select button click
     def selectClick(self):
         if self.images and len(self.images) != 0 and self.saveLocation:
-            shutil.copy2(self.images[self.index], self.saveLocation)
+            if self.imageLabel.get() != "":
+                if len(self.coords) == 2 and self.coords["x"] and self.coords["y"]:
+                    if not os.path.exists(self.saveLocation+"\\"+self.imagesFilename[self.index]):
+                        # Save the file name label and coords
+                        with open(self.saveLocation+"\info.txt","a+") as f:
+                            f.write(self.imagesFilename[self.index]+"@"+self.imageLabel.get()+"@"+str(self.coords["x"])+","+str(self.coords["y"])+"\n")
+                        shutil.copy2(self.images[self.index], self.saveLocation)
+
+                        self.log.set(self.imagesFilename[self.index] + " copied")
+                    else:
+                        self.log.set(self.imagesFilename[self.index] + " alread exist")
+                else:
+                    self.log.set("You need to specify a coord")
+            else:
+                self.log.set("You need to specify a label")
+            
         else:
             self.log.set("You need to open a folder and set a save location")
 
