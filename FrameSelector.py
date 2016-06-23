@@ -2,6 +2,7 @@ import fnmatch
 import os
 import shutil
 import _thread
+import time
 from tkinter import *
 from tkinter import filedialog
 from PIL import ImageTk, Image
@@ -17,6 +18,7 @@ class FrameSelector(object):
         self.saveLocation = None
         self.coords = {}
         self.coordShow = None
+        self.isSlideToRun = False
 
         # Create a windows and remove the resize option
         self.root = Tk()
@@ -26,7 +28,7 @@ class FrameSelector(object):
         self.configureGUI()       
     
     def configureGUI(self):
-        self.l = Label(self.root)
+        self.l = Label(self.root, bg="black")
         self.l.bind('<Button-1>', self.click)
         self.l.pack(fill=BOTH, expand=1)
 
@@ -34,7 +36,11 @@ class FrameSelector(object):
         f = Frame(self.root)
         Button(f, text="Open folder", command=self.openFolderClick).pack(side=LEFT, padx=5, pady=5)
         Button(f, text="Save location", command=self.saveClick).pack(side=LEFT, padx=5, pady=5)
+        Button(f, text="Prev", command=self.prevClick).pack(side=LEFT, padx=5, pady=5)
         Button(f, text="Next", command=self.nextClick).pack(side=LEFT, padx=5, pady=5)
+        self.slideText = StringVar()
+        Button(f, textvariable=self.slideText, command=self.slide).pack(side=LEFT, padx=5, pady=5)
+        self.slideText.set("Slide start")
         self.log = StringVar()
         Label(f, textvariable=self.log).pack(side=RIGHT, padx=5, pady=5)
         f.place(x=0, y=0)
@@ -51,6 +57,20 @@ class FrameSelector(object):
 
         # Start application
         self.root.mainloop()
+
+    def slide(self):
+        self.isSlideToRun = not self.isSlideToRun
+        _thread.start_new_thread(self.slideRun, ())
+        
+        if self.isSlideToRun == False:
+            self.slideText.set("Slide start")
+        else:
+            self.slideText.set("Slide stop")
+    
+    def slideRun(self):
+        while self.isSlideToRun:
+            self.nextClick()
+            time.sleep(0.1)
 
     def click(self, event):
         self.coords["x"] = event.x
@@ -138,3 +158,22 @@ class FrameSelector(object):
             self.log.set("Image " + str(self.index) + "/" + str(len(self.images)))
         else:
             self.log.set("No more images")
+            self.isSlideToRun = False
+
+    def prevClick(self):
+        # Verify if the list have image and is not the last image
+        
+        if len(self.images) != 0 and self.index > 0:
+            self.index = self.index - 1
+            #Create a PIL image from the bin
+            imageb = ImageUtils.readAsByte(self.images[self.index])
+            img = ImageUtils.decodeBytesToImage(imageb, 640, 480)
+
+            # Add the PIL image to GUI
+            self.photo = ImageTk.PhotoImage(image=img)
+            self.l.configure(image=self.photo)
+
+            self.log.set("Image " + str(self.index) + "/" + str(len(self.images)))
+        else:
+            self.log.set("No more images")
+            self.isSlideToRun = False
