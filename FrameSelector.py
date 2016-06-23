@@ -41,8 +41,6 @@ class FrameSelector(object):
         self.slideText = StringVar()
         Button(f, textvariable=self.slideText, command=self.slide).pack(side=LEFT, padx=5, pady=5)
         self.slideText.set("Slide start")
-        self.log = StringVar()
-        Label(f, textvariable=self.log).pack(side=RIGHT, padx=5, pady=5)
         f.place(x=0, y=0)
 
         # Create a label option
@@ -51,9 +49,19 @@ class FrameSelector(object):
         self.imageLabel = Entry(f2)
         self.imageLabel.pack(side=LEFT, padx=5, pady=5)
         Button(f2, text="Select", command=self.selectClick).pack(side=LEFT, padx=5, pady=5)
+        f2.place(x=0, y=35)
+
+        f3 = Frame(self.root)
+        self.log = StringVar()
+        self.log.set("TESTE")
+        Label(f3, textvariable=self.log).pack(side=RIGHT, padx=5, pady=5)
+        f3.place(x=0, y=445, height=35)
+
+        f4 = Frame(self.root)
         self.coordsLog = StringVar()
-        Label(f2, textvariable=self.coordsLog).pack(side=RIGHT, padx=5, pady=5)
-        f2.place(x=0, y=40)
+        self.coordsLog.set("Coords: (640,480)")
+        Label(f4, textvariable=self.coordsLog).pack(side=RIGHT, padx=5, pady=5)
+        f4.place(x=540, y=0, width=100)
 
         # Start application
         self.root.mainloop()
