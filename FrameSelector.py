@@ -53,18 +53,25 @@ class FrameSelector(object):
 
         f3 = Frame(self.root)
         self.log = StringVar()
-        self.log.set("TESTE")
-        Label(f3, textvariable=self.log).pack(side=RIGHT, padx=5, pady=5)
+        Label(f3, textvariable=self.log).pack(side=LEFT, padx=5, pady=5)
+        self.jumpTo = Entry(f3)
+        self.jumpTo.pack(side=LEFT, padx=5, pady=5)
+        Button(f3, text="Jump to", command=self.jump).pack(side=LEFT, padx=5, pady=5)
         f3.place(x=0, y=445, height=35)
 
         f4 = Frame(self.root)
         self.coordsLog = StringVar()
         self.coordsLog.set("Coords: (640,480)")
-        Label(f4, textvariable=self.coordsLog).pack(side=RIGHT, padx=5, pady=5)
+        Label(f4, textvariable=self.coordsLog).pack(side=LEFT, padx=5, pady=5)
         f4.place(x=540, y=0, width=100)
 
         # Start application
         self.root.mainloop()
+
+    def jump(self):
+        if self.jumpTo.get() != "" and self.jumpTo.get().isnumeric():
+            self.index = int(self.jumpTo.get()) - 1
+            self.nextClick()
 
     def slide(self):
         self.isSlideToRun = not self.isSlideToRun
